@@ -1,3 +1,4 @@
+import random
 import tkinter as tk
 import pandas as pd
 
@@ -14,7 +15,7 @@ print("Cleaning Data, and generating intermediate cleaned data")
 df = clean_data(watchings,movies , movie_watchings)
 user_watched = get_user_watched(df)
 
-USER_IDS = watchings["UserID"].unique().tolist()
+USER_IDS = user_watched["UserID"].unique().tolist()
 DF_DATA = None
 
 final = FinalModel(movies, user_watched, df)
@@ -31,12 +32,12 @@ class RecommenderUI:
         self.master = master
         master.title("Movie Recommender")
 
-        # Initialize the slider values
-        self.slider_1_value = 33
-        self.slider_2_value = 33
-        self.slider_3_value = 34
+        # Initial Slider Values
+        self.slider_1_value = 75
+        self.slider_2_value = 15
+        self.slider_3_value = 10
 
-        # Create the sliders for divvying up the total
+        # Weight Sliders
         self.slider_frame = tk.Frame(master)
         self.slider_frame.pack(fill=tk.X)
 
@@ -61,23 +62,25 @@ class RecommenderUI:
                                  command=self.update_sliders)
         self.slider_3.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
-        # Create the dropdown for selecting a user ID
-        self.dropdown_frame = tk.Frame(master)
-        self.dropdown_frame.pack(fill=tk.X)
+        # User ID Input
+        self.input_frame = tk.Frame(master)
+        self.input_frame.pack(fill=tk.X)
 
-        self.dropdown_label = tk.Label(self.dropdown_frame, text="Select a User ID:")
-        self.dropdown_label.pack(side=tk.LEFT)
-        self.selected_user_id = tk.StringVar()
-        self.selected_user_id.set(USER_IDS[0])
+        self.input_label = tk.Label(self.input_frame, text="Enter a User ID:")
+        self.input_label.pack(side=tk.LEFT)
+        self.user_id_entry = tk.Entry(self.input_frame, validate="focusout", validatecommand=self.validate_user_id)
+        self.user_id_entry.pack(side=tk.LEFT)
+        self.user_id_entry.insert(0, str(USER_IDS[0]))
 
-        self.dropdown = tk.OptionMenu(self.dropdown_frame, self.selected_user_id, *USER_IDS)
-        self.dropdown.pack(side=tk.LEFT)
+        # Random User Id Button
+        self.random_user_button = tk.Button(self.input_frame, text="Random User ID", command=self.random_user_id)
+        self.random_user_button.pack(side=tk.LEFT)
 
-        # Create the button for generating the dataframe
+        # Button to predict
         self.button = tk.Button(master, text="Go", command=self.generate_dataframe)
         self.button.pack()
 
-        # Create the output frame for displaying the dataframe
+        # Displays Data
         self.output_frame = tk.Frame(master)
         self.output_frame.pack(fill=tk.BOTH, expand=True)
 
@@ -110,8 +113,33 @@ class RecommenderUI:
             self.slider_2_value = self.slider_2.get()
             self.slider_3_value = self.slider_3.get()
 
+    def validate_user_id(self):
+        user_id_str = self.user_id_entry.get()
+
+        if user_id_str.isdigit() and int(user_id_str) in USER_IDS:
+            self.user_id_entry.config(bg="white")
+            return True
+        else:
+            self.user_id_entry.config(bg="red")
+            return False
+
+    def random_user_id(self):
+        random_id = random.choice(USER_IDS)
+        self.user_id_entry.delete(0, tk.END)
+        self.user_id_entry.insert(0, str(random_id))
+        self.user_id_entry.config(bg="white")
+
     def generate_dataframe(self):
-        user_id = int(self.selected_user_id.get())
+        # Get the entered user_id or default to the first user_id if invalid
+        try:
+            user_id = int(self.user_id_entry.get())
+            if user_id not in USER_IDS:
+                raise ValueError()
+        except ValueError:
+            user_id = USER_IDS[0]
+            self.user_id_entry.delete(0, tk.END)
+            self.user_id_entry.insert(0, str(user_id))
+
         df = generate_dataframe(user_id, (self.slider_1_value, self.slider_2_value, self.slider_3_value))
 
         self.output_table = df
