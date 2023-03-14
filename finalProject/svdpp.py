@@ -13,8 +13,8 @@ def trainSVDPP(User_Watched:pd.DataFrame) -> Callable[[Any], pd.DataFrame]:
     """
     assert isinstance(User_Watched, pd.DataFrame), "Inputted data is not a pd.DataFrame"
     COLS = ['UserID', 'MovieID', 'Number_Watched_log']
-    assert all((col in set(User_Watched.columns) for col in COLS)), f"Necesary columns not found. Necessary columns{COLS}"
-    
+    assert all((col in set(User_Watched.columns) for col in COLS)), f"Necesary columns not found. Necessary columns: {COLS}"
+
     reader = Reader(rating_scale=(0, 10))
     surprise_data = Dataset.load_from_df(User_Watched[['UserID', 'MovieID', 'Number_Watched_log']], reader)
     trainset, testset = train_test_split(surprise_data, test_size=.30, random_state=7)
@@ -48,11 +48,21 @@ def trainSVDPP(User_Watched:pd.DataFrame) -> Callable[[Any], pd.DataFrame]:
 
         predictions = [svd.predict(uid=uid, iid=movie, r_ui=None)[3] for movie in movies]
 
+        #Adjust prediction values
+        min_pred = min(predictions)
+        max_pred = max(predictions)
+        if min_pred == max_pred:
+            # if all predictions are the same, return 50 for each prediction
+            predictions = [50] * len(predictions)
+        else:
+            predictions = [round(1 + 99 * (p - min_pred) / (max_pred - min_pred)) for p in predictions]
+
         # Create a new DataFrame with the movie IDs and predictions
-        df = pd.DataFrame({'MovieID':  list(movies), 'Prediction': predictions})
+        df = pd.DataFrame({'MovieID': list(movies), 'Prediction': predictions})
         # Sort the DataFrame by the Prediction column in descending order
         df = df.sort_values(by='Prediction', ascending=False)
 
         return df
+
 
     return get_svd_predictions
