@@ -6,7 +6,15 @@ from surprise import KNNWithMeans, SVD, SVDpp, KNNBaseline, KNNBasic, KNNWithZSc
 from surprise.model_selection import train_test_split, cross_validate, KFold, GridSearchCV
 from collections import defaultdict
 
-def trainSVDPP(User_Watched:pd.DataFrame) -> Callable[[Any, np.ndarray, SVD], pd.DataFrame]:
+def trainSVDPP(User_Watched:pd.DataFrame) -> Callable[[Any], pd.DataFrame]:
+    """
+        Trains a svd++ model, given the user_watched dataframe.
+        Returns a prediction function that takes in a user function and yields prediction outputs.
+    """
+    assert isinstance(User_Watched, pd.DataFrame), "Inputted data is not a pd.DataFrame"
+    COLS = ['UserID', 'MovieID', 'Number_Watched_log']
+    assert all((col in set(User_Watched.columns) for col in COLS)), f"Necesary columns not found. Necessary columns{COLS}"
+    
     reader = Reader(rating_scale=(0, 10))
     surprise_data = Dataset.load_from_df(User_Watched[['UserID', 'MovieID', 'Number_Watched_log']], reader)
     trainset, testset = train_test_split(surprise_data, test_size=.30, random_state=7)
@@ -34,26 +42,14 @@ def trainSVDPP(User_Watched:pd.DataFrame) -> Callable[[Any, np.ndarray, SVD], pd
     # Get all the possible movies that were used
     movies = User_Watched['MovieID'].unique()
 
-    def get_svd_predictions(uid, movies, model):
+    def get_svd_predictions(uid):
         # Convert the movies array to a list
-        movies = movies.tolist()
+        movieList = movies.tolist()
 
-        # Initialize empty lists to store the movies IDs and predictions
-        movie_ids = []
-        predictions = []
-
-        # Iterate over the movies
-        for movie in movies:
-            # Use the model to make a prediction for the given user and movie
-            result = model.predict(uid=uid, iid=movie, r_ui=None)
-            est = result[3]  # Extract the prediction from the result tuple
-
-            # Store the movie ID and prediction in the lists
-            movie_ids.append(movie)
-            predictions.append(est)
+        predictions = [svd.predict(uid=uid, iid=movie, r_ui=None)[3] for movie in movies]
 
         # Create a new DataFrame with the movie IDs and predictions
-        df = pd.DataFrame({'MovieID': movie_ids, 'Prediction': predictions})
+        df = pd.DataFrame({'MovieID':  list(movies), 'Prediction': predictions})
         # Sort the DataFrame by the Prediction column in descending order
         df = df.sort_values(by='Prediction', ascending=False)
 
