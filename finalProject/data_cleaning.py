@@ -3,7 +3,10 @@ import numpy as np
 from datetime import datetime
 import os
 
-def clean_data(watchings_path: str, movies_path: str, movie_watchings_path: str) -> pd.DataFrame:
+from finalProject.util import __convert_int__
+
+
+def clean_data(watchings: pd.DataFrame, movies: pd.DataFrame, movie_watchings: pd.DataFrame) -> pd.DataFrame:
     """
         Cleans and processes raw data from the client.
         watchings: Watching events in terms of the provider and user
@@ -12,17 +15,13 @@ def clean_data(watchings_path: str, movies_path: str, movie_watchings_path: str)
 
         Returns: A analysis ready datarame with some added convinience columns
     """
-    assert isinstance(watchings_path, str), "watchings_path must be a string"
-    assert isinstance(movies_path, str), "movies_path must be a string"
-    assert isinstance(movie_watchings_path, str), "movie_watchings_path must be a string"
-    assert os.path.isfile(watchings_path), f"{watchings_path} is not a valid file path"
-    assert os.path.isfile(movies_path), f"{movies_path} is not a valid file path"
-    assert os.path.isfile(movie_watchings_path), f"{movie_watchings_path} is not a valid file path"
+    assert isinstance(watchings, pd.DataFrame), "watchings_path must be a pd.DataFrame"
+    assert isinstance(movies, pd.DataFrame), "movies_path must be a pd.DataFrame"
+    assert isinstance(movie_watchings, pd.DataFrame), "movie_watchings_path must be a pd.DataFrame"
 
-
-    watchings = pd.read_csv(watchings_path).filter(['WatchingID', 'UserID', 'WatchDate', 'ProviderID'], axis=1)
-    movies = pd.read_csv(movies_path).filter(['MovieID', 'MovieType', 'MovieRank'], axis=1)
-    movie_watchings = pd.read_csv(movie_watchings_path).filter(['WatchingID', 'ProviderID', 'MovieID', 'WatchDate'], axis=1)
+    watchings = watchings.filter(['WatchingID', 'UserID', 'WatchDate', 'ProviderID'], axis=1)
+    movies = movies.filter(['MovieID', 'MovieType', 'MovieRank'], axis=1)
+    movie_watchings = movie_watchings.filter(['WatchingID', 'ProviderID', 'MovieID', 'WatchDate'], axis=1)
 
     #Merge: movie_watchings and watching both have information regarding a single watching event
     df1 = pd.merge(watchings, movie_watchings, on='WatchingID').rename(columns={"ProviderID_x": "ProviderID"}).rename(columns={"WatchDate_x": "WatchDate"}).filter(['WatchingID', 'UserID', 'ProviderID', 'MovieID', 'WatchDate'], axis=1)
@@ -44,7 +43,7 @@ def clean_data(watchings_path: str, movies_path: str, movie_watchings_path: str)
         df[col] = df[col].apply(__convert_int__)
 
     df.drop_duplicates(subset=df.columns.difference(['WatchDate']), inplace=True)
-
+    df["WatchDate"] = df["WatchDate"].astype(str)
     return df
 
 

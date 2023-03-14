@@ -31,7 +31,7 @@ def trainSVDPP(user_watched: pd.DataFrame) -> Callable[[Any], pd.DataFrame]:
 
     data = Dataset.load_from_df(data[['UserID', 'MovieID', 'rating']], reader)
     # Run 5-fold cross-validation and print the results
-    cross_validate(svd, data, measures=['RMSE', 'MAE'], cv=5, verbose=True)
+    cross_validate(svd, data, measures=['RMSE', 'MAE'], cv=5, verbose=False)
 
     # sample full trainset
     trainset = data.build_full_trainset()

@@ -51,7 +51,7 @@ def date_type_converter(mydatetime: str):
     return datetime.datetime.strptime(mydatetime, "%Y-%m-%d %H:%M:%S").date()
 
 
-def output_score(df, timespan, max_days=math.inf):
+def output_score(df, timespan = 30, max_days=math.inf):
     hotelIDs = list(set(df['MovieID'].values.tolist()))
     hotelIDs.sort()
     scores = []
@@ -77,4 +77,4 @@ if __name__ == '__main__':
     hotelID = 88879
     timespan = 7
     std_coef = 1.5
-    print(output_score(df, 30))
+    print(output_score(df))

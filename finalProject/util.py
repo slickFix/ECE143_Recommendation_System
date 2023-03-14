@@ -1,5 +1,7 @@
 from typing import Union
 
+import numpy as np
+
 
 def __convert_int__(str_in: Union[str, int]) -> Union[str, int]:
     """
