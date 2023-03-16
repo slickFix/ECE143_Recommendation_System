@@ -122,7 +122,7 @@ def monthlyTrendyWrapper(df, month,  bookings=250, sd_diff=2.0, weightEqual=Fals
     for tup in lst:
         movieID.append(tup[0])
         movieRanking.append(tup[1])
-    data = {'movieID': movieID,
+    data = {'MovieID': movieID,
             'ranking': movieRanking}
     ret = pd.DataFrame(data, columns = ["MovieID", "ranking"])
     return ret

@@ -111,7 +111,7 @@ class RecommenderUI:
         total_inactive = sum([current_values[i] for i in inactive_slider_indices])
         for slider_index in inactive_slider_indices:
             sliders[slider_index].set(round((remaining_total*current_values[slider_index])/total_inactive))
-
+        self.slider_1_value, self.slider_2_value, self.slider_3_value = (slider.get() for slider in sliders)
 
 
 
